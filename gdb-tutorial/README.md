@@ -18,7 +18,7 @@ divmod(np.timedelta64(1, "Y"), np.timedelta64(1, "s"))   # Segmentation fault
 
 You need [pixi](https://pixi.sh). Everything else (Python 3.12, compilers,
 [spin](https://github.com/scientific-python/spin), lldb) comes from
-conda-forge and is pinned in `pixi.lock`. Linux and macOS are supported.
+conda-forge and is pinned in `pixi.lock`.
 
 ```bash
 pixi install --locked    # create the environment exactly as locked
@@ -28,7 +28,6 @@ pixi run crash           # Segmentation fault
 
 | Task             | What it does                                                                   |
 |------------------|--------------------------------------------------------------------------------|
-| `clone`          | Clone NumPy into `numpy-src/` at `NUMPY_REV` (the parent of the fix)           |
 | `build`          | `spin build -- -Dbuildtype=debug -Ddisable-optimization=true`                  |
 | `crash`          | Rebuild if needed, then `spin python ../crash.py`                              |
 | `debug`          | Rebuild if needed, then run `crash.py` under lldb                              |
@@ -125,11 +124,6 @@ frame #1: ... PyUFunc_DivmodTypeResolver(...) at ufunc_type_resolution.c:2236:13
 
 `PyArray_PromoteTypes` returned `NULL`. By CPython convention, a `NULL`
 return means "an exception is set". Is one set?
-
-(`PyArray_DESCR(operands[0])` is a `static inline` helper, and lldb can't call
-it here. It fails with "call to 'PyArray_DESCR' is ambiguous". Casting to
-`PyArrayObject_fields *` and reading the `descr` field directly does the same
-thing.)
 
 **3. Inspect the pending exception by calling C functions from lldb.**
 
