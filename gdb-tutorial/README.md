@@ -30,7 +30,8 @@ pixi run crash           # Segmentation fault
 | `clone`          | Clone NumPy into `numpy-src/` at `NUMPY_REV` (the parent of the fix)           |
 | `build`          | `spin build -- -Dbuildtype=debug -Ddisable-optimization=true`                  |
 | `crash`          | Rebuild if needed, then `spin python ../crash.py`                              |
-| `debug`          | Rebuild if needed, then `spin gdb ../crash.py` (`spin lldb` on macOS)          |
+| `debug`          | Rebuild if needed, then run `crash.py` under gdb (lldb on macOS)               |
+| `backtrace`      | Same, non-interactive: run, print the C and Python stack traces, exit          |
 | `apply-fix`      | Cherry-pick the upstream fix into `numpy-src/`                                 |
 | `reset`          | Drop local changes and go back to the buggy revision                           |
 
@@ -40,6 +41,27 @@ pixi run crash           # Segmentation fault
 environment. `crash` and `debug` run `build` first, and the rebuild is
 incremental, so after you edit C code in `numpy-src/` only the changed files
 get recompiled.
+
+### Passing options to gdb
+
+`debug` takes one optional argument, which is inserted as gdb options before
+`--args python ../crash.py`. Quote it as a single string:
+
+```bash
+pixi run debug                                   # plain interactive session
+pixi run debug "-ex run"                         # start running right away
+pixi run debug "-ex 'break PyUFunc_DivmodTypeResolver' -ex run"
+pixi run debug "-batch -ex run -ex 'bt 5'"       # scripted, then exit
+```
+
+The task also sets `set breakpoint pending on`. NumPy's extension module isn't
+loaded when gdb starts, so without it a `break` on a NumPy function in `-ex`
+would be refused instead of deferred until the module loads.
+
+`pixi run backtrace` is shorthand for `pixi run debug "-batch -ex run -ex bt -ex py-bt"`.
+
+On macOS the same argument goes to lldb instead, so use lldb syntax:
+`pixi run debug "-o run"`, or `"--batch -o run -o bt"`.
 
 To use spin directly, run it from inside `numpy-src/` in the pixi environment
 (`pixi shell`, then `cd numpy-src`). For example, `spin gdb -c 'import numpy'`

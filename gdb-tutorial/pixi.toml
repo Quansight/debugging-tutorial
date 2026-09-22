@@ -2,6 +2,8 @@
 name = "numpy-gdb-tutorial"
 channels = ["conda-forge"]
 platforms = ["linux-64", "linux-aarch64", "osx-64", "osx-arm64"]
+# Task arguments (`args` + `{{ }}` templating) need a recent pixi; 0.81 is what this was tested with.
+requires-pixi = ">=0.81"
 
 [dependencies]
 python = "3.12.*"
@@ -46,11 +48,20 @@ depends-on = ["build"]
 cwd = "numpy-src"
 cmd = "spin python ../crash.py"
 
+# Extra debugger options go in one quoted argument, e.g.
+#   pixi run debug "-ex run -ex bt"
+# Pending breakpoints are on so `-ex 'break <numpy function>'` works before
+# NumPy's extension module has been loaded.
 [tasks.debug]
 description = "Rebuild if needed, then run the reproducer under gdb"
 depends-on = ["build"]
 cwd = "numpy-src"
-cmd = "spin gdb --no-build ../crash.py"
+args = [{ arg = "gdb_args", default = "" }]
+cmd = "spin gdb --no-build -- -iex 'set breakpoint pending on' {{ gdb_args }} --args python -P ../crash.py"
+
+[tasks.backtrace]
+description = "Non-interactive: run under gdb and print the C and Python stack traces"
+depends-on = [{ task = "debug", args = ["-batch -ex run -ex bt -ex py-bt"] }]
 
 [tasks.apply-fix]
 description = "Apply the upstream fix (numpy/numpy#27812) to numpy-src"
@@ -64,4 +75,9 @@ cmd = "git -C numpy-src reset --hard $NUMPY_REV"
 description = "Rebuild if needed, then run the reproducer under lldb"
 depends-on = ["build"]
 cwd = "numpy-src"
-cmd = "spin lldb --no-build ../crash.py"
+args = [{ arg = "gdb_args", default = "" }]
+cmd = "spin lldb --no-build -- {{ gdb_args }} -- python -P ../crash.py"
+
+[target.osx.tasks.backtrace]
+description = "Non-interactive: run under lldb and print the C stack trace"
+depends-on = [{ task = "debug", args = ["--batch -o run -o bt"] }]
