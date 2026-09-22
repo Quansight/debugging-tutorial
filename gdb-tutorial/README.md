@@ -16,25 +16,34 @@ divmod(np.timedelta64(1, "Y"), np.timedelta64(1, "s"))   # Segmentation fault
 ## Setup
 
 You need [pixi](https://pixi.sh). Everything else (Python 3.12, compilers,
-meson, gdb/lldb) comes from conda-forge and is pinned in `pixi.lock`.
+[spin](https://github.com/scientific-python/spin), gdb/lldb) comes from
+conda-forge and is pinned in `pixi.lock`.
 
 ```bash
 pixi install --locked    # create the environment exactly as locked
-pixi run build           # clone numpy/numpy at the pinned revision, then do a debug build (~2 min)
+pixi run build           # clone numpy/numpy at the pinned revision, then spin build in debug mode (~2 min)
 pixi run crash           # Segmentation fault
 ```
 
-| Task             | What it does                                                           |
-|------------------|------------------------------------------------------------------------|
-| `clone`          | Clone NumPy into `numpy-src/` at `NUMPY_REV` (the parent of the fix)   |
-| `build`          | Editable debug build (`buildtype=debug`, `disable-optimization=true`)  |
-| `crash`          | `python crash.py`                                                      |
-| `debug`          | `gdb --args python crash.py` (`lldb -- python crash.py` on macOS)      |
-| `apply-fix`      | Cherry-pick the upstream fix into `numpy-src/`                         |
-| `reset`          | Drop local changes and go back to the buggy revision                   |
+| Task             | What it does                                                                   |
+|------------------|--------------------------------------------------------------------------------|
+| `clone`          | Clone NumPy into `numpy-src/` at `NUMPY_REV` (the parent of the fix)           |
+| `build`          | `spin build -- -Dbuildtype=debug -Ddisable-optimization=true`                  |
+| `crash`          | Rebuild if needed, then `spin python ../crash.py`                              |
+| `debug`          | Rebuild if needed, then `spin gdb ../crash.py` (`spin lldb` on macOS)          |
+| `apply-fix`      | Cherry-pick the upstream fix into `numpy-src/`                                 |
+| `reset`          | Drop local changes and go back to the buggy revision                           |
 
-NumPy is installed in editable mode. After you edit C code in `numpy-src/`,
-the next `import numpy` rebuilds the changed files automatically.
+`spin build` compiles into `numpy-src/build/` and installs into
+`numpy-src/build-install/`. `spin python` and `spin gdb` point
+`PYTHONPATH` at that install, so nothing is installed into the pixi
+environment. `crash` and `debug` run `build` first, and the rebuild is
+incremental, so after you edit C code in `numpy-src/` only the changed files
+get recompiled.
+
+To use spin directly, run it from inside `numpy-src/` in the pixi environment
+(`pixi shell`, then `cd numpy-src`). For example, `spin gdb -c 'import numpy'`
+or `spin python -X faulthandler ../crash.py`.
 
 ## Walkthrough (Linux, gdb)
 
@@ -124,7 +133,7 @@ if (out_dtypes[0] == NULL) {
 
 ```bash
 pixi run apply-fix    # cherry-pick the upstream commit (or type the fix in yourself)
-pixi run crash        # rebuilds on import, then: TypeError: Cannot get a common metadata divisor ...
+pixi run crash        # incremental rebuild, then: TypeError: Cannot get a common metadata divisor ...
 pixi run reset        # back to the crashing revision
 ```
 
@@ -141,7 +150,7 @@ pixi run reset        # back to the crashing revision
   `import numpy`.)
 - `info frame`, `info args`, `info locals`, and `frame N` to move around the stack.
 - Run without gdb and get a Python-level traceback on crash:
-  `pixi run python -X faulthandler crash.py`.
+  `spin python -X faulthandler ../crash.py` from `numpy-src/`.
 
 ## macOS notes
 
@@ -159,5 +168,5 @@ steps in lldb:
 | `call (void)PyErr_Print()`          | `expr (void)PyErr_Print()`                     |
 | `break PyErr_Format`                | `b PyErr_Format`                               |
 
-lldb has no `py-bt`. Use `python -X faulthandler crash.py` to get the
+lldb has no `py-bt`. Use `spin python -X faulthandler ../crash.py` to get the
 Python-level traceback instead.

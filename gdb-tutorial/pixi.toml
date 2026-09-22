@@ -7,13 +7,11 @@ platforms = ["linux-64", "linux-aarch64", "osx-64", "osx-arm64"]
 python = "3.12.*"
 c-compiler = "*"
 cxx-compiler = "*"
-meson = "*"
-meson-python = "*"
 ninja = "*"
 cython = "*"
 pkg-config = "*"
-pip = "*"
 git = "*"
+spin = "0.18.*"
 
 [target.linux.dependencies]
 gdb = "17.2.*"
@@ -37,25 +35,25 @@ git -C numpy-src submodule update --init --recursive --filter=blob:none
 """
 
 [tasks.build]
-description = "Debug (-O0 -g) editable build of NumPy from numpy-src"
+description = "Debug (-O0 -g) build of NumPy with spin, installed into numpy-src/build-install"
 depends-on = ["clone"]
-cmd = """
-pip install --no-build-isolation --no-deps -v --editable ./numpy-src \
-  -Cbuild-dir=build-debug \
-  -Csetup-args=-Dbuildtype=debug \
-  -Csetup-args=-Ddisable-optimization=true
-"""
+cwd = "numpy-src"
+cmd = "spin build -- -Dbuildtype=debug -Ddisable-optimization=true"
 
 [tasks.crash]
-description = "Run the reproducer with plain Python (segfaults)"
-cmd = "python crash.py"
+description = "Rebuild if needed, then run the reproducer (segfaults)"
+depends-on = ["build"]
+cwd = "numpy-src"
+cmd = "spin python ../crash.py"
 
 [tasks.debug]
-description = "Run the reproducer under gdb"
-cmd = "gdb --args python crash.py"
+description = "Rebuild if needed, then run the reproducer under gdb"
+depends-on = ["build"]
+cwd = "numpy-src"
+cmd = "spin gdb --no-build ../crash.py"
 
 [tasks.apply-fix]
-description = "Apply the upstream fix (numpy/numpy#27812) to numpy-src; the editable install rebuilds on next import"
+description = "Apply the upstream fix (numpy/numpy#27812) to numpy-src"
 cmd = "git -C numpy-src cherry-pick --no-commit $NUMPY_FIX_REV"
 
 [tasks.reset]
@@ -63,5 +61,7 @@ description = "Drop any local changes in numpy-src, back to the buggy revision"
 cmd = "git -C numpy-src reset --hard $NUMPY_REV"
 
 [target.osx.tasks.debug]
-description = "Run the reproducer under lldb"
-cmd = "lldb -- python crash.py"
+description = "Rebuild if needed, then run the reproducer under lldb"
+depends-on = ["build"]
+cwd = "numpy-src"
+cmd = "spin lldb --no-build ../crash.py"
