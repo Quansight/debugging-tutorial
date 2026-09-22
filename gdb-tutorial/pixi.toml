@@ -1,5 +1,5 @@
 [workspace]
-name = "numpy-gdb-tutorial"
+name = "numpy-lldb-tutorial"
 channels = ["conda-forge"]
 platforms = ["linux-64", "linux-aarch64", "osx-64", "osx-arm64"]
 # Task arguments (`args` + `{{ }}` templating) need a recent pixi; 0.81 is what this was tested with.
@@ -14,12 +14,6 @@ cython = "*"
 pkg-config = "*"
 git = "*"
 spin = "0.18.*"
-
-[target.linux.dependencies]
-gdb = "17.2.*"
-
-[target.osx.dependencies]
-# gdb cannot debug native arm64 macOS processes, so use lldb there.
 lldb = "22.1.*"
 
 [activation.env]
@@ -48,20 +42,18 @@ depends-on = ["build"]
 cwd = "numpy-src"
 cmd = "spin python ../crash.py"
 
-# Extra debugger options go in one quoted argument, e.g.
-#   pixi run debug "-ex run -ex bt"
-# Pending breakpoints are on so `-ex 'break <numpy function>'` works before
-# NumPy's extension module has been loaded.
+# Extra lldb options go in one quoted argument, e.g.
+#   pixi run debug "-o run -o bt"
 [tasks.debug]
-description = "Rebuild if needed, then run the reproducer under gdb"
+description = "Rebuild if needed, then run the reproducer under lldb"
 depends-on = ["build"]
 cwd = "numpy-src"
-args = [{ arg = "gdb_args", default = "" }]
-cmd = "spin gdb --no-build -- -iex 'set breakpoint pending on' {{ gdb_args }} --args python -P ../crash.py"
+args = [{ arg = "lldb_args", default = "" }]
+cmd = "spin lldb --no-build -- {{ lldb_args }} -- python -P ../crash.py"
 
 [tasks.backtrace]
-description = "Non-interactive: run under gdb and print the C and Python stack traces"
-depends-on = [{ task = "debug", args = ["-batch -ex run -ex bt -ex py-bt"] }]
+description = "Non-interactive: run under lldb, print the stack trace at the crash, exit"
+depends-on = [{ task = "debug", args = ["--batch -o run -k bt -k quit"] }]
 
 [tasks.apply-fix]
 description = "Apply the upstream fix (numpy/numpy#27812) to numpy-src"
@@ -70,14 +62,3 @@ cmd = "git -C numpy-src cherry-pick --no-commit $NUMPY_FIX_REV"
 [tasks.reset]
 description = "Drop any local changes in numpy-src, back to the buggy revision"
 cmd = "git -C numpy-src reset --hard $NUMPY_REV"
-
-[target.osx.tasks.debug]
-description = "Rebuild if needed, then run the reproducer under lldb"
-depends-on = ["build"]
-cwd = "numpy-src"
-args = [{ arg = "gdb_args", default = "" }]
-cmd = "spin lldb --no-build -- {{ gdb_args }} -- python -P ../crash.py"
-
-[target.osx.tasks.backtrace]
-description = "Non-interactive: run under lldb and print the C stack trace"
-depends-on = [{ task = "debug", args = ["--batch -o run -o bt"] }]
