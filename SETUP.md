@@ -30,9 +30,10 @@ pixi shell --locked
 Pixi builds CPython from source with four jobs and installs it in
 `.pixi/envs/default`. Later runs reuse the build.
 
-Stay in this shell for setup and the tutorial. Keep `.pixi`: LLDB needs
-the source and object files in its build directories. If you move the
-checkout, rebuild it at the new location.
+Use `pixi shell --locked` for setup and the tutorial; it selects the debug
+interpreter and NumPy build automatically. Run `exit` to leave the shell.
+Keep `.pixi`: LLDB needs the source and object files in its build
+directories. If you move the checkout, rebuild it at the new location.
 
 ## Check the debug interpreter
 
@@ -58,14 +59,13 @@ git -C numpy-src submodule update --init --recursive --depth 1
 cd numpy-src
 spin build -j 4 -- -Dbuildtype=debug
 cd ..
-export PYTHONPATH="$PWD/numpy-src/build-install/usr/lib/python3.15/site-packages"
 
 python -c 'import numpy; print(numpy.__version__); print(numpy.__file__)'
 ```
 
 Expect version `2.5.3` and a path under `numpy-src/build-install`.
-spin builds NumPy with Meson and installs it there; `PYTHONPATH` selects
-that build for Python and the debugger.
+spin builds NumPy with Meson and installs it there. Pixi sets `PYTHONPATH`
+for both `pixi shell` and `pixi run` to select that build.
 
 `-Dbuildtype=debug` enables debug information and disables optimization.
 Keep NumPy's source and build directories too. The reference-counting
@@ -98,25 +98,15 @@ the debug interpreter's absolute path to LLDB to run the example.
 Continue with the [reference-counting walkthrough](debugger-tutorial/README.md)
 or the [profiling tutorial](samply-tutorial/README.md).
 
-## Return in a new terminal
-
-From the repository root, re-enter the shell and restore `PYTHONPATH`:
-
-```bash
-pixi shell --locked
-export PYTHONPATH="$PWD/numpy-src/build-install/usr/lib/python3.15/site-packages"
-```
-
-Change into the tutorial directory. Run `exit` to leave the Pixi shell.
-
 ## Troubleshooting
 
 - **Wrong Python or missing `sys.gettotalrefcount`:** leave any previously
-  activated virtual environment and [re-enter the Pixi shell](#return-in-a-new-terminal).
+  activated virtual environment and run `pixi shell --locked`.
   Check `python -c 'import sys; print(sys.executable)'` points into
   `.pixi/envs/default/bin`, then repeat the [debug-build check](#check-the-debug-interpreter).
-- **Wrong NumPy or import failure:** [restore `PYTHONPATH`](#return-in-a-new-terminal)
-  and check that `numpy.__file__` points into `numpy-src/build-install`.
+- **Wrong NumPy or import failure:** use the Pixi shell and check that
+  `numpy.__file__` points into `numpy-src/build-install`. If that directory
+  is missing, [build NumPy](#build-numpy).
 - **Missing C source lines or types:** LLDB needs the source and build
   artifacts for both Python and NumPy. If you moved or removed them,
   rebuild at the current location. For missing NumPy debug information,

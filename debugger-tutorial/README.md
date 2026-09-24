@@ -26,8 +26,7 @@ python measure.py
 python reproduce.py
 ```
 
-Run the remaining terminal commands from `debugger-tutorial/`, keeping
-the Pixi shell and `PYTHONPATH` from setup.
+Run the remaining terminal commands from `debugger-tutorial/` in the Pixi shell.
 
 ## Establish the symptom
 

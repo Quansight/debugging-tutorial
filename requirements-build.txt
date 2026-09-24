@@ -1,0 +1,6 @@
+# NumPy is built with spin and its vendored Meson.
+spin==0.18
+meson-python==0.21.1
+Cython==3.3.0
+# Pin meson-python's Meson dependency too.
+meson==1.12.1
