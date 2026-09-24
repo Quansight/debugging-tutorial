@@ -111,9 +111,17 @@ A second SIGUSR1 after `del dtype` stops us before interpreter shutdown.
 
 ## Watch the total reference count
 
-A breakpoint stops at a code location. A **hardware watchpoint** stops when
-a memory location is written, including by inlined code or another shared
-library. We do not need to know which function writes it.
+A breakpoint stops at a code location. A watchpoint stops on access to a
+memory location, including from inlined code or another shared library.
+We do not need to know which function accesses it.
+
+Watchpoints can be implemented in hardware or software. A
+[software watchpoint](https://sourceware.org/gdb/current/onlinedocs/gdb.html/Set-Watchpoints.html)
+may require single-stepping the program and checking the watched value after
+every instruction. That is expensive even when the value never changes.
+A **hardware watchpoint** uses the CPU's debug registers to detect accesses
+to a memory region. The program runs normally until a matching access traps
+into the debugger, avoiding instruction-by-instruction checking.
 
 In this Python 3.15 build, the location is the main interpreter's
 `object_state.reftotal`, a `Py_ssize_t` (8 bytes).
@@ -125,22 +133,57 @@ At the first SIGUSR1 stop, try:
 
 ```text
 (lldb) watchpoint set expression -w write -s 8 -- &_PyRuntime.interpreters.main->object_state.reftotal
+(lldb) watchpoint list -v
 (lldb) continue
 (lldb) bt
 ```
 
-LLDB needs CPython's debug type information to follow these fields.
-`-s 8` sets the watched region's size. The address may change on each run;
-evaluate the expression instead of reusing an earlier process's address.
+The command specifies what to watch:
 
-LLDB should report a hardware watchpoint, its address, and old/new values
-when it triggers. The instruction that caused the stop has generally already
-executed; the highlighted source line can be the next line. Read the stack
-and values together. `watchpoint list` shows the watchpoint's ID and hit count.
+- `watchpoint set expression` evaluates an expression to obtain the address
+  of the memory to watch. It does not reevaluate the expression after every
+  instruction.
+- `-w write` selects writes, not reads. It also stops on stores that leave
+  the value unchanged; `-w modify` would stop only when the value changes.
+- `-s 8` watches eight bytes, covering the whole `Py_ssize_t` counter.
+- `--` ends the options. The following `&...reftotal` expression takes the
+  counter's address, rather than its current value.
+
+There is no separate hardware-enabling flag: LLDB allocates hardware
+resources for this command. `-w` selects the access type, not hardware versus
+software. `watchpoint list -v` reports the supported hardware watchpoint
+count and the resources assigned to our watchpoint. Look for an 8-byte
+entry under `watchpoint resources`; the available slot count depends on the
+CPU.
+
+In GDB, watch the same counter at the first SIGUSR1 stop with:
+
+```text
+(gdb) watch -location _PyRuntime.interpreters.main->object_state.reftotal
+(gdb) info watchpoints
+```
+
+`-location` watches the counter's storage, taking its address and size from
+the expression and its type, so omit the `&` and explicit byte count.
+GDB attempts to use hardware automatically; check that creation reports
+`Hardware watchpoint`, since it can fall back to software. `-location` does
+not force hardware. Unlike LLDB's `-w write`, GDB's `watch` stops only when
+the value changes, so it would miss a store of the same value.
+
+LLDB needs CPython's debug type information to evaluate the address. The
+address may change on each run, so do not reuse one from an earlier process.
+
+When the watchpoint triggers, LLDB prints the old and new values. The
+instruction that caused the stop has generally already executed; the
+highlighted source line can be the next line. Read the stack and values
+together. `watchpoint list` also shows the watchpoint's ID and hit count.
 
 The first hit may be ordinary interpreter or signal-handler activity.
-SIGUSR1 removes import noise, but every Python operation still changes
-references. Disable the watchpoint while moving closer to the constructor:
+Hardware makes detecting a write cheap, but handling each hit still stops
+the process and hands control to the debugger. This counter changes so often
+that watching it through imports or shutdown would still be slow. SIGUSR1
+skips the import-time hits; disable the watchpoint while moving closer to
+the constructor:
 
 ```text
 (lldb) watchpoint disable 1
@@ -229,12 +272,13 @@ finish:
 ```
 
 Hardware limits the number, size, and alignment of watchpoints; avoid
-watching large structs. One aligned 8-byte counter fits here, but watching
-it through imports or shutdown is slow because each write stops the process.
+watching large structs. One aligned 8-byte counter fits here.
 If you know which object is wrong, watching that object's `ob_refcnt` can
 reduce noise; stop watching its address before it is freed and reused.
-Here, watching only `descr->ob_refcnt` could miss the second initialization's
-assignment of 1 to an already-1 field.
+Watching `descr->ob_refcnt` with `-w modify` would miss the second
+initialization's assignment of 1 to an already-1 field; `-w write` can catch
+that store. We watch the total because it exposes the erroneous extra
+increment directly.
 
 ## Make the one-line fix and verify it
 
