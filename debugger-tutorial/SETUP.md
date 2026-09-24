@@ -5,17 +5,10 @@ the Linux instructions. You need [pixi](https://pixi.sh); on macOS, also
 install Apple's Command Line Tools (`xcode-select --install`) for the SDK.
 Allow time and several GB of disk space for tools and source builds.
 
-On macOS, put the checkout somewhere such as `~/Developer/debugging-tutorial`,
-outside Documents, Desktop, and Downloads. Those folders have additional
-privacy controls, and Python may wait for a file-access prompt during a
-debugging session. If you use a protected folder, allow access when prompted
-or enable it for the Python entry in **System Settings → Privacy & Security
-→ Files & Folders**. See [Apple's file-access instructions](https://support.apple.com/guide/mac-help/mchld5a35146/mac).
-
 From the root of this repository:
 
 ```bash
-cd gdb-tutorial
+cd debugger-tutorial
 pixi run --locked setup-python
 pixi shell
 source .venv/bin/activate
