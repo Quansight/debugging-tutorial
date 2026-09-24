@@ -1,2 +1,7 @@
 .pixi/
 numpy-src/
+numpy-user-dtypes/
+.python-builds/
+.venv/
+*.log
+__pycache__/

@@ -1,64 +1,24 @@
 [workspace]
-name = "numpy-lldb-tutorial"
+name = "numpy-watchpoint-tutorial"
 channels = ["conda-forge"]
 platforms = ["linux-64", "linux-aarch64", "osx-64", "osx-arm64"]
-# Task arguments (`args` + `{{ }}` templating) need a recent pixi; 0.81 is what this was tested with.
 requires-pixi = ">=0.81"
 
 [dependencies]
-python = "3.12.*"
 c-compiler = "*"
 cxx-compiler = "*"
 ninja = "*"
-cython = "*"
 pkg-config = "*"
 git = "*"
-spin = "0.18.*"
+uv = "0.12.9.*"
+
+[tasks.setup-python]
+description = "Prepare debug Python and the Python build dependencies"
+cmd = "bash setup-python.sh"
+
+# macOS uses Apple's LLDB, including its signed debugserver.
+[target.linux-64.dependencies]
 lldb = "22.1.*"
 
-[activation.env]
-# Parent of the fix: last commit where divmod(timedelta64[Y], timedelta64[s]) segfaults.
-NUMPY_REV = "283a60855a46d5b367e1f253c6ab3afcb3c755dc"
-# BUG: ``timedelta64.__[r]divmod__`` segfaults for incompatible units (#27812)
-NUMPY_FIX_REV = "2cac1c5c6cc19675f37759dc0d12bbe06ec23da3"
-
-[tasks.clone]
-description = "Clone NumPy at the pinned (pre-fix) revision, with submodules"
-cmd = """
-(test -d numpy-src || git clone --filter=blob:none https://github.com/numpy/numpy.git numpy-src) && \
-git -C numpy-src checkout --detach $NUMPY_REV && \
-git -C numpy-src submodule update --init --recursive --filter=blob:none
-"""
-
-[tasks.build]
-description = "Debug (-O0 -g) build of NumPy with spin, installed into numpy-src/build-install"
-depends-on = ["clone"]
-cwd = "numpy-src"
-cmd = "spin build -- -Dbuildtype=debug -Ddisable-optimization=true"
-
-[tasks.crash]
-description = "Rebuild if needed, then run the reproducer (segfaults)"
-depends-on = ["build"]
-cwd = "numpy-src"
-cmd = "spin python ../crash.py"
-
-# Extra lldb options go in one quoted argument, e.g.
-#   pixi run debug "-o run -o bt"
-[tasks.debug]
-description = "Rebuild if needed, then run the reproducer under lldb"
-depends-on = ["build"]
-cwd = "numpy-src"
-args = [{ arg = "lldb_args", default = "" }]
-cmd = "spin lldb --no-build -- {{ lldb_args }} -- python -P ../crash.py"
-
-[tasks.backtrace]
-description = "Non-interactive: run under lldb, print the stack trace at the crash, exit"
-depends-on = [{ task = "debug", args = ["--batch -o run -k bt -k quit"] }]
-
-[tasks.apply-fix]
-description = "Apply the upstream fix (numpy/numpy#27812) to numpy-src"
-cmd = "git -C numpy-src cherry-pick --no-commit $NUMPY_FIX_REV"
-
-[tasks.reset]
-description = "Drop any local changes in numpy-src, back to the buggy revision"
-cmd = "git -C numpy-src reset --hard $NUMPY_REV"
+[target.linux-aarch64.dependencies]
+lldb = "22.1.*"
