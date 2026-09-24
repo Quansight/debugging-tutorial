@@ -73,7 +73,7 @@ git -C numpy-src submodule update --init --recursive --depth 1
 git -C numpy-src apply ../reintroduce-refcount-bug.patch
 
 cd numpy-src
-spin build -j 4 -- -Dbuildtype=debug -Dcpu-dispatch=none
+spin build -- -Dbuildtype=debug
 cd ..
 export PYTHONPATH="$PWD/numpy-src/build-install/usr/lib/python3.11/site-packages"
 

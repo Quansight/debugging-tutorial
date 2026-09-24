@@ -1,11 +1,13 @@
 # Finding a NumPy reference-counting bug with LLDB
 
-This exercise recreates [numpy/numpy#23318](https://github.com/numpy/numpy/pull/23318),
-Nathan Goldbaum's March 2023 fix, merged by Sebastian Berg. NumPy initialized
-a dtype twice: `tp_alloc` already initialized it, then NumPy called
-`PyObject_Init` again. Deleting that second call fixed the reference-counting
-error. We will use a hardware watchpoint to see both initializations inside
-CPython and follow their call stacks back into NumPy.
+This exercise recreates
+[numpy/numpy#23318](https://github.com/numpy/numpy/pull/23318), a
+reference counting bug that Nathan Goldbaum fixed using hardware
+watchpoints. NumPy initialized a dtype twice: `tp_alloc` already
+initialized it, then NumPy called `PyObject_Init` again. Deleting that
+second call fixed the reference-counting error. We will use a hardware
+watchpoint to see both initializations inside CPython and follow their
+call stacks back into NumPy.
 
 We use NumPy 2.4.6 with the faulty line restored by a small patch, and a
 Python 3.11 debug interpreter. This combination supports spin and Meson
@@ -13,8 +15,11 @@ while keeping the reference total in a single named global variable.
 NumPy's built-in `StringDType` exercises the affected constructor, so the
 example needs no additional extension.
 
-The program completes normally. Our symptom is a growing total reference
-count, so there is no crash to give us a useful starting stack trace.
+This sort of debugging is useful when there is a single variable that
+many disparate code paths of threads of execution touch. If you have a
+simple enough reproducer and can narrow down exactly what triggers the
+bug but not why, this can sometimes make it easy to determine exactly
+what is going wrong.
 
 ## Set up your machine
 
@@ -24,6 +29,9 @@ The walkthrough uses **LLDB on both Linux and macOS**. Run terminal commands fro
 `gdb-tutorial/`, with the environments activated as described in setup.
 
 ## Establish the symptom
+
+The program completes normally. Our symptom is a growing total reference
+count, so there is no crash to give us a useful starting stack trace.
 
 Read [measure.py](measure.py), then run it:
 
