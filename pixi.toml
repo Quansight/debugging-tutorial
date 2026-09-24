@@ -1,0 +1,30 @@
+[workspace]
+name = "debugging-tutorials"
+channels = ["conda-forge"]
+platforms = ["linux-64", "linux-aarch64", "osx-64", "osx-arm64"]
+requires-pixi = ">=0.81"
+preview = ["pixi-build"]
+
+[dependencies]
+python = { path = "python-debug" }
+c-compiler = "*"
+cxx-compiler = "*"
+ninja = "*"
+pkg-config = "*"
+git = "*"
+samply = "*"
+
+[tasks.build-python]
+description = "Build and check the shared Python 3.15.0rc2 debug interpreter"
+cmd = "python -VV && python -c 'import sysconfig; assert sysconfig.get_config_var(\"Py_DEBUG\") == 1'"
+
+# Linux LLDB embeds its own Python, independently of the tutorial interpreter.
+# macOS uses Apple's LLDB and signed debugserver from the Command Line Tools.
+[feature.debugger.target.linux-64.dependencies]
+lldb = "22.1.*"
+
+[feature.debugger.target.linux-aarch64.dependencies]
+lldb = "22.1.*"
+
+[environments]
+debugger = { features = ["debugger"], no-default-feature = true }

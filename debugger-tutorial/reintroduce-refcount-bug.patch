@@ -1,7 +1,7 @@
 diff --git a/numpy/_core/src/multiarray/descriptor.c b/numpy/_core/src/multiarray/descriptor.c
 --- a/numpy/_core/src/multiarray/descriptor.c
 +++ b/numpy/_core/src/multiarray/descriptor.c
-@@ -2525,6 +2525,7 @@ arraydescr_new(PyTypeObject *subtype,
+@@ -2554,6 +2554,7 @@ arraydescr_new(PyTypeObject *subtype,
                  PyErr_NoMemory();
                  return NULL;
              }

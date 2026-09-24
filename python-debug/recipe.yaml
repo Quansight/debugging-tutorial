@@ -1,0 +1,47 @@
+# Adapted from CPython v3.15.0rc2, Tools/pixi-packages/recipe.yaml.
+# Keep only the GIL-enabled debug build needed for these tutorials.
+package:
+  name: python
+  version: 3.15.0rc2
+
+source:
+  url: https://www.python.org/ftp/python/3.15.0/Python-3.15.0rc2.tar.xz
+  sha256: 8d93af5eaaaea5adfd41bd786a7ba3f03f2ad1ab57c6a65e0b963deab91d5ad7
+
+build:
+  string: tutorial_debug_0
+  script: build.sh
+  python:
+    site_packages_path: lib/python3.15/site-packages
+
+requirements:
+  build:
+    - ${{ compiler('c') }}
+    - make
+    - pkg-config
+    - if: linux
+      then: binutils
+  host:
+    - bzip2
+    - sqlite
+    - liblzma-devel
+    - zlib
+    - zstd
+    - openssl 3.5.*
+    - readline
+    - ncurses
+    - libffi
+    - libmpdec-devel
+    - expat
+    - if: linux
+      then: libuuid
+
+tests:
+  - script:
+      - python -VV
+      - python -c 'import sysconfig; assert sysconfig.get_config_var("Py_DEBUG") == 1'
+
+about:
+  homepage: https://www.python.org/
+  license: Python-2.0
+  license_file: LICENSE
