@@ -21,12 +21,8 @@ PYTHONPATH = "$PIXI_PROJECT_ROOT/numpy-src/build-install/usr/lib/python3.15/site
 description = "Build and check the shared Python 3.15.0rc2 debug interpreter"
 cmd = "python -VV && python -c 'import sysconfig; assert sysconfig.get_config_var(\"Py_DEBUG\") == 1'"
 
-# Linux LLDB embeds its own Python, independently of the tutorial interpreter.
-# macOS uses Apple's LLDB and signed debugserver from the Command Line Tools.
-[feature.debugger.target.linux-64.dependencies]
-lldb = "22.1.*"
-
-[feature.debugger.target.linux-aarch64.dependencies]
+# LLDB embeds its own Python, independently of the tutorial interpreter.
+[feature.debugger.dependencies]
 lldb = "22.1.*"
 
 [environments]

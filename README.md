@@ -1,6 +1,6 @@
 # Debugging tutorials
 
-Tutorials for debugging native code on Linux and macOS.
+Tutorials for debugging native code.
 
 Complete the [setup](SETUP.md) before the session.
 

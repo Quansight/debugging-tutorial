@@ -1,6 +1,6 @@
 # Shared setup for the debugging tutorials
 
-Use Linux or macOS on x86-64 or ARM64, or WSL2 on Windows.
+Use an x86-64 or ARM64 machine. Windows users need WSL2.
 Install [Pixi](https://pixi.sh) and, on macOS, Apple's Command Line Tools
 (`xcode-select --install`). Source builds require several GB of disk space.
 Run these commands from the **repository root** in bash or zsh.
@@ -74,26 +74,15 @@ Profiling may require different optimization settings.
 
 ## Check the tools
 
-Check Samply:
+Check Samply and install LLDB in its separate Pixi environment:
 
 ```bash
 samply --version
-```
-
-On macOS, use Apple's LLDB:
-
-```bash
-lldb --version
-```
-
-On Linux, install and run LLDB in its separate Pixi environment:
-
-```bash
 pixi run --locked -e debugger lldb --version
 ```
 
-Linux LLDB embeds a separate Python for scripting. The walkthrough passes
-the debug interpreter's absolute path to LLDB to run the example.
+LLDB embeds its own Python for scripting. Pass the tutorial interpreter's
+absolute path to run the example.
 
 Continue with the [reference-counting walkthrough](debugger-tutorial/README.md)
 or the [profiling tutorial](samply-tutorial/README.md).

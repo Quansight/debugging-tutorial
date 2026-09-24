@@ -48,7 +48,7 @@ extra references for 100 constructions, and 1000 for 1000. A small constant
 offset is not the bug. Warming caches and repeating samples distinguishes
 steady growth from one-time initialization.
 
-For example, with the pinned builds on macOS ARM64:
+Example output:
 
 ```text
    0 constructions: [1, 1, 1, 1, 1]
@@ -92,13 +92,7 @@ python_executable="$(python -c 'from pathlib import Path; import sys; print(Path
 ```
 
 The path should be inside the repository's `.pixi/envs/default/bin`.
-On macOS, launch Apple's LLDB:
-
-```bash
-lldb -- "$python_executable" "$PWD/reproduce.py"
-```
-
-On Linux, launch LLDB from its separate environment:
+Launch LLDB:
 
 ```bash
 pixi run --locked -e debugger lldb -- "$python_executable" "$PWD/reproduce.py"
@@ -122,7 +116,7 @@ a memory location is written, including by inlined code or another shared
 library. We do not need to know which function writes it.
 
 In this Python 3.15 build, the location is the main interpreter's
-`object_state.reftotal`, a `Py_ssize_t` (8 bytes on our supported platforms).
+`object_state.reftotal`, a `Py_ssize_t` (8 bytes).
 It tracks references in the interpreter and extensions built with its
 debug headers. `_Py_RefTotal` still exists for compatibility
 with older extensions, but it is no longer the counter to watch here.
@@ -198,7 +192,7 @@ The second initialization reaches `_Py_NewReference` through the
 for the same descriptor. If there are intermediate hits on your build,
 continue and compare their stacks; normal reference operations also occur.
 
-For example, on macOS ARM64:
+For example:
 
 ```text
 _Py_NewReference
