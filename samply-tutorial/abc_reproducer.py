@@ -8,7 +8,7 @@ def check(_):
     for x in mylist:
         isinstance(x, numbers.Integral)
 
-for cores in [1, 2, 4, 8]:
+for cores in [1, 2, 3, 4]:
     start = time()
     with ThreadPoolExecutor(cores) as pool:
         list(pool.map(check, range(cores)))
