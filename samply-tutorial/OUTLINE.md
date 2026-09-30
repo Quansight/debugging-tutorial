@@ -43,4 +43,15 @@
     * Make a reproducer
         * `is_scalar_nan`: https://github.com/scikit-learn/scikit-learn/blob/bbf8863a869f118a1a42422d8cc67ec6c07f2fe0/sklearn/utils/_missing.py#L9
     * `abc_reproducer.py`
-
+    * Can profile, again limiting to only 4 thread case
+    * Mutex conflicts are all under `in_weak_set`
+    * There's a cache
+    * And the cache is protected by a lock
+    * No GIL in free-threaded Python, so locks are often per-object
+    * Multiple threads trying to lock at same time will slow you down a lot
+* Solutions
+    * Within Python, try not to have a lock, or maybe read/write lock
+    * Within scikit-learn, why is `is_scalar_nan`, a Python function, being called so much?
+        * Lots of repeat calls to Python functions is a performance smell
+        * Used to be called much more
+        * In latest `scikit-learn`, is basically not called at all, so this conflict goes away
