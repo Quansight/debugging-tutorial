@@ -18,3 +18,8 @@ samply = "*"
 [pypi-dependencies]
 scikit-learn = "==1.9.1"
 pandas = ">=3.0.6, <4"
+
+[activation.env]
+# Work around lack of oversaturation protection in current versions of joblib:
+OMP_NUM_THREADS = "1"
+OPENBLAS_NUM_THREADS = "1"
