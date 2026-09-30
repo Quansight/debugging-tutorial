@@ -6,7 +6,7 @@ mylist = [1.0] * 100_000
 
 def check(_):
     for x in mylist:
-        isinstance(x, numbers.Integral)
+        isinstance(x, numbers.Real)
 
 for cores in [1, 2, 3, 4]:
     start = time()
