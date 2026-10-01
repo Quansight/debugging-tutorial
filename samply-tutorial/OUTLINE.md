@@ -10,7 +10,7 @@
     * Generic tool, works with any compiled code, so useful outside of Python, and works with any version of Python
     * UI is Firefox Profiler, a sophisticated UI that you can use from other tools too
 * Run with Python 3.15's new profiler
-    * `python -m profiling.sampling run --gecko --all-threads --native regression_pipeline_tuning.py`
+    * `python -m profiling.sampling run --gecko --all-threads --native timeline.py`
     * Go to https://profiler.firefox.com
     * Upload the JSON file
     * Downside: Only Python 3.15, as we'll see doesn't show the info you get from samply
@@ -24,18 +24,17 @@
     * By default `profiling.sampling` shows both kinds of threads, but you can change output
 * Show timeline in Firefox Profiler
     * Notice how you may have only one thread running, and then parallelism isn't helping
-    * Notice some threads run longer than others
-    * Not all threads show by default! Show how to turn them on
-* Flamegraph
-    * Make sure to select threads you care about!
+    * Switch to flamegraph
+    * Understanding flamegraph
+        * Callstacks, the wider the more time spent
+        * Look for wider columns
     * Talk about limits of flamegraph
-        * Can't show you issues due to parallelism, e.g. only one thread running
+        * Can't show you issues due to parallelism, e.g. only one thread running: 25% time spent on add in flamegraph, but in reality it's more like 60%!
         * No concept of before/after, order is arbitrary
         * Need to look at it together with the timeline
     * Show how you can do flamegraph on subset of time, too
-* Understanding flamegraph
-    * Callstacks, the wider the more time spent
-    * Look for wider columns
+* Switch to real example: `samply record python -X perf regression_pipeline_tuning.py`
+    * Some threads are hidden by the UI!
     * `is_scalar_nan` why
     * `ABCMeta.__instancecheck___()` what
     * Locks?!
