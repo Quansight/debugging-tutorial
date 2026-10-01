@@ -54,3 +54,8 @@
         * Lots of repeat calls to Python functions is a performance smell
         * Used to be called much more
         * In latest `scikit-learn`, is basically not called at all, so this conflict goes away
+* Four practices of performance, and how you would spot them, if there is time:
+    * Algorithmic efficiency
+    * Compilation
+    * Mechanical sympathy
+    * Parallelism
