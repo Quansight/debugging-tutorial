@@ -9,7 +9,7 @@ source:
   sha256: 8d93af5eaaaea5adfd41bd786a7ba3f03f2ad1ab57c6a65e0b963deab91d5ad7
 
 build:
-  string: tutorial_debug_0
+  string: tutorial_debug_1_cp315
   script: build.sh
   python:
     site_packages_path: lib/python3.15/site-packages
@@ -21,6 +21,8 @@ requirements:
     - pkg-config
     - if: linux
       then: binutils
+  run:
+    - python_abi 3.15.* *_cp315
   host:
     - bzip2
     - sqlite

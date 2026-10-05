@@ -4,7 +4,7 @@ import gc
 import sys
 
 if not hasattr(sys, "gettotalrefcount"):
-    raise SystemExit("Use the debug Python from the shared setup in ../SETUP.md.")
+    raise SystemExit("Use the default Pixi environment: pixi shell --locked (see ../SETUP.md).")
 
 from numpy.dtypes import StringDType
 
