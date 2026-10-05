@@ -49,10 +49,21 @@ A hardware watchpoint uses CPU debug registers to catch writes without
 single-stepping. Here, `-w write` selects writes to the reference total, `-s 8` sets the byte
 count, and `&` supplies the address. Check the hardware resources with
 `watchpoint list -v`; use the breakpoint/watchpoint IDs LLDB prints.
+Containers and VMs must allow debugging child processes and expose hardware watchpoints.
+
+When creating or listing a watchpoint, `Watchpoint 1 hit` with `hit_count = 0`
+shows the initial value; real stops may highlight the line after the write.
 
 Compare the stacks: `tp_alloc` initializes the object through `PyType_GenericAlloc`,
-then `PyObject_Init` initializes it again. Both increment the debug total,
-but the object's reference count is reset to 1, so deleting it subtracts only once.
+then `PyObject_Init` initializes it again:
+
+```text
+PyType_GenericAlloc → arraydescr_new (descriptor.c:2552)
+PyObject_Init       → arraydescr_new (descriptor.c:2557)
+```
+
+Both increment the debug total, but the object's reference count is reset to 1,
+so deleting it subtracts only once.
 Run `watchpoint disable 1`, `continue` twice (past the second signal), then `quit`.
 
 ## Fix and verify
@@ -67,5 +78,5 @@ cd ../debugger-tutorial
 python measure.py
 ```
 
-All batch sizes should now give the same small offset (`[1, 1, 1, 1, 1]` here).
+All batch sizes should now give the same small offset (`[1, 1, 1, 1, 1]`).
 For a Python API to hardware watchpoints on Linux, try [libdebug](https://docs.libdebug.org/latest/).

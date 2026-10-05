@@ -86,6 +86,10 @@ export LLDB_DEBUGSERVER_PATH="$(xcode-select -p)/../SharedFrameworks/LLDB.framew
 if [ ! -x "$LLDB_DEBUGSERVER_PATH" ]; then
     export LLDB_DEBUGSERVER_PATH="$(xcode-select -p)/Library/PrivateFrameworks/LLDB.framework/Versions/A/Resources/debugserver"
 fi
+if [ ! -x "$LLDB_DEBUGSERVER_PATH" ]; then
+    echo "debugserver not found" >&2
+    unset LLDB_DEBUGSERVER_PATH
+fi
 ```
 
 Continue with the [reference-counting walkthrough](debugger-tutorial/README.md).
@@ -146,7 +150,3 @@ and no assertion error. Continue with the [profiling tutorial](samply-tutorial/R
 - **Profiling imports enable the GIL:** check that you selected
   `pixi shell --locked -e profiling` and that `PYTHON_GIL=1` is not set in
   your shell. The locked packages support free-threaded Python.
-- **NumPy was built with a different interpreter:** move the existing
-  `numpy-src/build` and `numpy-src/build-install` aside, then repeat
-  [the NumPy build](#build-numpy) in the default environment. Extensions
-  built for the ordinary ABI cannot be used by free-threaded Python.
