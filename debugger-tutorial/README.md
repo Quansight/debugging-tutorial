@@ -1,7 +1,7 @@
 # Finding a NumPy reference-counting bug with LLDB
 
 Complete the [reference-counting setup](../SETUP.md#reference-counting-environment).
-This recreates [NumPy bug #23318](https://github.com/numpy/numpy/pull/23318) using `StringDType`.
+This recreates the bug fixed by [NumPy PR #23318](https://github.com/numpy/numpy/pull/23318).
 From the repository root, outside any other Pixi shell:
 
 ```bash
