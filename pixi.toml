@@ -1,29 +1,59 @@
 [workspace]
 name = "debugging-tutorials"
-channels = ["conda-forge"]
+channels = ["conda-forge", "conda-forge/label/python_rc"]
 platforms = ["linux-64", "linux-aarch64", "osx-64", "osx-arm64"]
 requires-pixi = ">=0.81"
 preview = ["pixi-build"]
 
+# Reference-counting exercise: a GIL-enabled debug interpreter and build tools.
 [dependencies]
-python = { path = "python-debug" }
+python = { path = "." }
 c-compiler = "*"
 cxx-compiler = "*"
 ninja = "*"
 pkg-config = "*"
 git = "*"
-samply = "*"
+spin = "==0.18"
+meson-python = "==0.21.1"
+cython = "==3.3.0"
+meson = "==1.12.1"
 
 [activation.env]
 PYTHONPATH = "$PIXI_PROJECT_ROOT/numpy-src/build-install/usr/lib/python3.15/site-packages"
 
 [tasks.build-python]
-description = "Build and check the shared Python 3.15.0rc2 debug interpreter"
-cmd = "python -VV && python -c 'import sysconfig; assert sysconfig.get_config_var(\"Py_DEBUG\") == 1'"
+description = "Build and check the Python 3.15.0rc2 debug interpreter"
+cmd = "python -VV && python -c 'import sysconfig; assert sysconfig.get_config_var(\"Py_DEBUG\") == 1; assert not sysconfig.get_config_var(\"Py_GIL_DISABLED\")'"
 
-# LLDB embeds its own Python, independently of the tutorial interpreter.
+# Profiling exercise: a prebuilt free-threaded release interpreter and wheels.
+[feature.profiling.dependencies]
+python = "==3.15.0rc2"
+python-freethreading = "*"
+samply = "*"
+
+[feature.profiling.pypi-dependencies]
+scikit-learn = "==1.9.1"
+pandas = "==3.0.6"
+numpy = "==2.5.3"
+
+[feature.profiling.activation.env]
+# Use the installed wheels even if the parent shell selects a local NumPy build.
+PYTHONPATH = ""
+# Limit native worker pools so they do not multiply the Python worker count.
+OMP_NUM_THREADS = "1"
+OPENBLAS_NUM_THREADS = "1"
+
+# LLDB embeds its own Python, independently of the interpreter being debugged.
 [feature.debugger.dependencies]
 lldb = "22.1.*"
 
 [environments]
+profiling = { features = ["profiling"], no-default-feature = true }
 debugger = { features = ["debugger"], no-default-feature = true }
+
+[package.build.backend]
+name = "pixi-build-rattler-build"
+version = "*"
+
+[package.build.config]
+recipe = "python-debug/recipe.yaml"

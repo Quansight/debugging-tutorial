@@ -1,8 +1,11 @@
 # Profiling native code with Samply
 
-This tutorial is under construction. Follow [setup](../SETUP.md) to build
-Python and NumPy and install Samply.
+This tutorial is under construction. Follow the [profiling setup](../SETUP.md#profiling-environment)
+to install free-threaded Python, the scientific packages, and Samply.
 
-If you ran the reference-counting exercise, [remove the injected bug and
-rebuild NumPy](../debugger-tutorial/README.md#make-the-one-line-fix-and-verify-it)
-before profiling.
+From the repository root, outside any other Pixi shell:
+
+```bash
+pixi shell --locked -e profiling
+cd samply-tutorial
+```
