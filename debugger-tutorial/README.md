@@ -21,7 +21,8 @@ constructions and 1000 for 1000, plus a small constant measurement offset.
 [reproduce.py](reproduce.py) uses [SIGUSR1](https://numpy.org/devdocs/dev/development_advanced_debugging.html#running-a-test-script)
 to stop after imports; its no-op handler lets us resume without terminating Python.
 On macOS, [configure debugserver](../SETUP.md#check-lldb) in this shell.
-Resolve Python's **real executable**: passing a symlink to LLDB can hang on macOS.
+The first command below finds the full path to the active environment's
+Python program, following symbolic links (shortcuts) to the actual file.
 
 ```bash
 python_executable="$(python -c 'from pathlib import Path; import sys; print(Path(sys.executable).resolve())')"

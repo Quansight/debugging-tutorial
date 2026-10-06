@@ -73,9 +73,9 @@ BLAS/LAPACK or NumPy's bundled fallback routines.
 pixi run --locked -e debugger lldb --version
 ```
 
-LLDB uses a small tool environment named `debugger` because its scripting
-Python is independent of the interpreter being debugged. Pass the tutorial
-interpreter's absolute, resolved path to LLDB.
+LLDB's `debugger` environment has its own Python for scripting. The
+[launch commands](debugger-tutorial/README.md#follow-the-writes) tell LLDB to run
+the Python program from the tutorial's `default` environment.
 
 On macOS, configure conda-forge's LLDB to use Apple's signed debugserver.
 Run this in each shell where you launch LLDB:
