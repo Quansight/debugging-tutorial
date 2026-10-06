@@ -8,7 +8,7 @@ From the repository root, outside any other Pixi shell:
 pixi shell --locked
 git -C numpy-src apply ../debugger-tutorial/reintroduce-refcount-bug.patch
 cd numpy-src
-spin build -j 4
+spin build
 cd ../debugger-tutorial
 python measure.py
 ```
