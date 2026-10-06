@@ -54,7 +54,7 @@ git clone --branch v2.5.3 --depth 1 https://github.com/numpy/numpy.git numpy-src
 git -C numpy-src submodule update --init --recursive --depth 1
 
 cd numpy-src
-spin build -j 4 -- -Dbuildtype=debug
+spin build -- -Dbuildtype=debug
 cd ..
 
 python -c 'import numpy; print(numpy.__version__); print(numpy.__file__)'
