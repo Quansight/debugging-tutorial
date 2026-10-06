@@ -109,22 +109,28 @@ build do not affect profiling.
 
 Check that importing the scientific packages leaves the GIL disabled:
 
+```pycon
+>>> import sys
+>>> import sysconfig
+>>> import numpy, pandas, sklearn
+>>> print(sys.version)
+3.15.0rc2 free-threading build | packaged by conda-forge | (main, Oct  5 2026, 16:42:21) [Clang 21.1.8 ]
+>>> print("NumPy:", numpy.__version__, numpy.__file__)
+NumPy: 2.5.3 /Users/goldbaum/Documents/debugging-tutorial/.pixi/envs/profiling/lib/python3.15t/site-packages/numpy/__init__.py
+>>> assert sysconfig.get_config_var("Py_GIL_DISABLED") == 1
+>>> assert not sysconfig.get_config_var("Py_DEBUG")
+>>> assert not sys._is_gil_enabled()
+```
+
+Also check that samply is working:
+
 ```bash
-python - <<'PYTHON'
-import sys
-import sysconfig
-import numpy, pandas, sklearn
-print(sys.version)
-print("NumPy:", numpy.__version__, numpy.__file__)
-assert sysconfig.get_config_var("Py_GIL_DISABLED") == 1
-assert not sysconfig.get_config_var("Py_DEBUG")
-assert not sys._is_gil_enabled()
-PYTHON
 samply --version
 ```
 
-Expect “free-threading build”, a NumPy path inside `.pixi/envs/profiling`,
-and no assertion error. Continue with the [profiling tutorial](samply-tutorial/README.md).
+Expect `samply 0.13.1`.
+
+Continue with the [profiling tutorial](samply-tutorial/README.md).
 
 ## Troubleshooting
 
